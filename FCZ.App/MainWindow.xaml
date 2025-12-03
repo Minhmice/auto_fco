@@ -1,0 +1,85 @@
+﻿<Window x:Class="FCZ.App.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:FCZ.App"
+        xmlns:vm="clr-namespace:FCZ.App.ViewModels"
+        mc:Ignorable="d"
+        Title="FCZ Screen Automation Debugger" Height="600" Width="1200">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="2*"/>
+            <ColumnDefinition Width="3*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- Left: Preview -->
+        <Border Grid.Column="0" BorderBrush="Gray" BorderThickness="1" Margin="5">
+            <Image Source="{Binding CurrentFrame}" Stretch="Uniform"/>
+        </Border>
+
+        <!-- Right: TabControl -->
+        <TabControl Grid.Column="1" Margin="5">
+            <!-- User Tab -->
+            <TabItem Header="User">
+                <Grid Margin="10">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <TextBlock Grid.Row="0" Text="{Binding StatusMessage}" FontWeight="Bold" Margin="0,0,0,10"/>
+                    
+                    <Label Grid.Row="1" Content="Scenario:"/>
+                    <ComboBox Grid.Row="2" ItemsSource="{Binding Scenarios}" SelectedItem="{Binding SelectedScenario}" 
+                              DisplayMemberPath="Name" Margin="0,0,0,10"/>
+
+                    <StackPanel Grid.Row="3" Orientation="Horizontal" Margin="0,0,0,10">
+                        <Button Content="Run Scenario" Command="{Binding RunScenarioCommand}" 
+                                IsEnabled="{Binding IsProcessFound}" Margin="0,0,5,0"/>
+                        <Button Content="Stop" Command="{Binding StopScenarioCommand}" 
+                                IsEnabled="{Binding IsRunning}"/>
+                    </StackPanel>
+
+                    <CheckBox Grid.Row="4" Content="Background Mode" IsChecked="{Binding IsBackgroundMode}" 
+                              Command="{Binding ToggleBackgroundModeCommand}" Margin="0,0,0,10"/>
+
+                    <Button Grid.Row="5" Content="Restore Game Window" Command="{Binding RestoreWindowCommand}" 
+                            IsEnabled="{Binding IsBackgroundMode}"/>
+                </Grid>
+            </TabItem>
+
+            <!-- Dev Tab -->
+            <TabItem Header="Dev">
+                <Grid Margin="10">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="2*"/>
+                    </Grid.RowDefinitions>
+
+                    <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,10">
+                        <Button Content="Load Scenario" Margin="0,0,5,0"/>
+                        <Button Content="Save Scenario" Margin="0,0,5,0"/>
+                        <Button Content="Capture Template" Margin="0,0,5,0"/>
+                        <Button Content="Step-by-Step Debug"/>
+                    </StackPanel>
+
+                    <ListBox Grid.Row="1" ItemsSource="{Binding CurrentSteps}" 
+                            DisplayMemberPath="Id" Margin="0,0,0,10"/>
+
+                    <TextBlock Grid.Row="2" Text="Log:" FontWeight="Bold" Margin="0,0,0,5"/>
+
+                    <TextBox Grid.Row="3" Text="{Binding LogText}" IsReadOnly="True" 
+                            VerticalScrollBarVisibility="Auto" TextWrapping="Wrap"/>
+                </Grid>
+            </TabItem>
+        </TabControl>
+    </Grid>
+</Window>
