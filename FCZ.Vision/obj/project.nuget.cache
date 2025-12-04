@@ -1,0 +1,11 @@
+{
+  "version": 2,
+  "dgSpecHash": "Bn1PZT/1tEw=",
+  "success": true,
+  "projectFilePath": "C:\\Users\\Minhmice\\Documents\\Project\\auto_fco\\FCZ.Vision\\FCZ.Vision.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\Minhmice\\.nuget\\packages\\opencvsharp4\\4.11.0.20250507\\opencvsharp4.4.11.0.20250507.nupkg.sha512",
+    "C:\\Users\\Minhmice\\.nuget\\packages\\system.memory\\4.6.3\\system.memory.4.6.3.nupkg.sha512"
+  ],
+  "logs": []
+}

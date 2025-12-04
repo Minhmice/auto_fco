@@ -1,0 +1,13 @@
+{
+  "version": 2,
+  "dgSpecHash": "3WkgkzxdhCA=",
+  "success": true,
+  "projectFilePath": "C:\\Users\\Minhmice\\Documents\\Project\\auto_fco\\FCZ.Scenarios\\FCZ.Scenarios.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\Minhmice\\.nuget\\packages\\microsoft.win32.systemevents\\10.0.0\\microsoft.win32.systemevents.10.0.0.nupkg.sha512",
+    "C:\\Users\\Minhmice\\.nuget\\packages\\opencvsharp4\\4.11.0.20250507\\opencvsharp4.4.11.0.20250507.nupkg.sha512",
+    "C:\\Users\\Minhmice\\.nuget\\packages\\system.drawing.common\\10.0.0\\system.drawing.common.10.0.0.nupkg.sha512",
+    "C:\\Users\\Minhmice\\.nuget\\packages\\system.memory\\4.6.3\\system.memory.4.6.3.nupkg.sha512"
+  ],
+  "logs": []
+}

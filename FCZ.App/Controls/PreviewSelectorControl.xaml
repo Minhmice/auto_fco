@@ -1,0 +1,43 @@
+<UserControl x:Class="FCZ.App.Controls.PreviewSelectorControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:FCZ.App">
+    <UserControl.Resources>
+        <local:NullToVisibilityConverter x:Key="NullToVisibilityConverter"/>
+    </UserControl.Resources>
+    <Grid>
+        <Image x:Name="PreviewImage" Source="{Binding CurrentFrame, RelativeSource={RelativeSource AncestorType=UserControl}}" Stretch="Uniform"/>
+        <Canvas x:Name="OverlayCanvas" Background="Transparent" 
+                MouseLeftButtonDown="OnMouseDown"
+                MouseMove="OnMouseMove"
+                MouseLeftButtonUp="OnMouseUp"
+                MouseLeave="OnMouseLeave"
+                Focusable="True">
+            <Rectangle x:Name="SelectionRectangle" 
+                      Stroke="Blue" 
+                      StrokeThickness="2"
+                      Fill="#4000FFFF"
+                      Visibility="Collapsed"/>
+            <Line x:Name="CrosshairH" 
+                  Stroke="Red" 
+                  StrokeThickness="1"
+                  Visibility="Collapsed"/>
+            <Line x:Name="CrosshairV" 
+                  Stroke="Red" 
+                  StrokeThickness="1"
+                  Visibility="Collapsed"/>
+            <TextBlock x:Name="CoordinatesText" 
+                      Foreground="Yellow" 
+                      Background="#80000000"
+                      Padding="3"
+                      Visibility="Collapsed"/>
+        </Canvas>
+        <TextBlock Text="No capture" 
+                  HorizontalAlignment="Center" 
+                  VerticalAlignment="Center" 
+                  Foreground="Gray" 
+                  FontSize="16"
+                  Visibility="{Binding CurrentFrame, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource NullToVisibilityConverter}}"/>
+    </Grid>
+</UserControl>
+

@@ -243,6 +243,11 @@ namespace FCZ.App.ViewModels
                         return null;
                     }
 
+                    // Copy pixel data to managed array before unlocking
+                    int bufferSize = bitmapData.Stride * bitmapData.Height;
+                    byte[] pixelData = new byte[bufferSize];
+                    Marshal.Copy(bitmapData.Scan0, pixelData, 0, bufferSize);
+
                     var bitmapSource = BitmapSource.Create(
                         bitmapData.Width,
                         bitmapData.Height,
@@ -250,8 +255,7 @@ namespace FCZ.App.ViewModels
                         bitmap.VerticalResolution,
                         System.Windows.Media.PixelFormats.Bgra32,
                         null,
-                        bitmapData.Scan0,
-                        bitmapData.Stride * bitmapData.Height,
+                        pixelData,
                         bitmapData.Stride);
 
                     if (bitmapSource != null)
@@ -275,7 +279,11 @@ namespace FCZ.App.ViewModels
 
         private void OnStepStarted(Step step)
         {
-            System.Windows.Application.Current.Dispatcher.Invoke(() =>
+            var app = System.Windows.Application.Current;
+            if (app == null)
+                return;
+
+            app.Dispatcher.Invoke(() =>
             {
                 AppendLog($"Step started: {step.Id} ({step.Type})");
             });
@@ -283,7 +291,11 @@ namespace FCZ.App.ViewModels
 
         private void OnStepCompleted(Step step, StepResult result)
         {
-            System.Windows.Application.Current.Dispatcher.Invoke(() =>
+            var app = System.Windows.Application.Current;
+            if (app == null)
+                return;
+
+            app.Dispatcher.Invoke(() =>
             {
                 AppendLog($"Step completed: {step.Id} - Success: {result.Success}, Message: {result.Message}");
             });
@@ -291,7 +303,11 @@ namespace FCZ.App.ViewModels
 
         private void OnScenarioCompleted(ScenarioResult result)
         {
-            System.Windows.Application.Current.Dispatcher.Invoke(() =>
+            var app = System.Windows.Application.Current;
+            if (app == null)
+                return;
+
+            app.Dispatcher.Invoke(() =>
             {
                 IsRunning = false;
                 AppendLog($"Scenario completed: {result.Message}");
@@ -484,13 +500,13 @@ namespace FCZ.App.ViewModels
         private static extern bool IsWindow(IntPtr hWnd);
 
         [RelayCommand]
-        private async void LaunchGame()
+        private async Task LaunchGameAsync()
         {
             AppendLog("Checking if game is already running...");
             
             // Check if game is already running
             var existingWindow = _windowManager.FindTargetWindow();
-            if (existingWindow != null)
+            if (existingWindow.HasValue)
             {
                 AppendLog("Game is already running - no need to launch again");
                 return;

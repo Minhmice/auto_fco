@@ -1,0 +1,13 @@
+C:\Users\Minhmice\Documents\Project\auto_fco\FCZ.Vision\bin\Debug\net8.0\FCZ.Vision.deps.json
+C:\Users\Minhmice\Documents\Project\auto_fco\FCZ.Vision\bin\Debug\net8.0\FCZ.Vision.dll
+C:\Users\Minhmice\Documents\Project\auto_fco\FCZ.Vision\bin\Debug\net8.0\FCZ.Vision.pdb
+C:\Users\Minhmice\Documents\Project\auto_fco\FCZ.Vision\obj\Debug\net8.0\FCZ.Vision.csproj.AssemblyReference.cache
+C:\Users\Minhmice\Documents\Project\auto_fco\FCZ.Vision\obj\Debug\net8.0\FCZ.Vision.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Minhmice\Documents\Project\auto_fco\FCZ.Vision\obj\Debug\net8.0\FCZ.Vision.AssemblyInfoInputs.cache
+C:\Users\Minhmice\Documents\Project\auto_fco\FCZ.Vision\obj\Debug\net8.0\FCZ.Vision.AssemblyInfo.cs
+C:\Users\Minhmice\Documents\Project\auto_fco\FCZ.Vision\obj\Debug\net8.0\FCZ.Vision.csproj.CoreCompileInputs.cache
+C:\Users\Minhmice\Documents\Project\auto_fco\FCZ.Vision\obj\Debug\net8.0\FCZ.Vision.sourcelink.json
+C:\Users\Minhmice\Documents\Project\auto_fco\FCZ.Vision\obj\Debug\net8.0\FCZ.Vision.dll
+C:\Users\Minhmice\Documents\Project\auto_fco\FCZ.Vision\obj\Debug\net8.0\refint\FCZ.Vision.dll
+C:\Users\Minhmice\Documents\Project\auto_fco\FCZ.Vision\obj\Debug\net8.0\FCZ.Vision.pdb
+C:\Users\Minhmice\Documents\Project\auto_fco\FCZ.Vision\obj\Debug\net8.0\ref\FCZ.Vision.dll

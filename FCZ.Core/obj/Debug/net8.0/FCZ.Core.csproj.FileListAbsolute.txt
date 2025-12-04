@@ -1,0 +1,16 @@
+C:\Users\Minhmice\Documents\Project\auto_fco\FCZ.Core\bin\Debug\net8.0\FCZ.Core.deps.json
+C:\Users\Minhmice\Documents\Project\auto_fco\FCZ.Core\bin\Debug\net8.0\FCZ.Core.dll
+C:\Users\Minhmice\Documents\Project\auto_fco\FCZ.Core\bin\Debug\net8.0\FCZ.Core.pdb
+C:\Users\Minhmice\Documents\Project\auto_fco\FCZ.Core\bin\Debug\net8.0\FCZ.Vision.dll
+C:\Users\Minhmice\Documents\Project\auto_fco\FCZ.Core\bin\Debug\net8.0\FCZ.Vision.pdb
+C:\Users\Minhmice\Documents\Project\auto_fco\FCZ.Core\obj\Debug\net8.0\FCZ.Core.csproj.AssemblyReference.cache
+C:\Users\Minhmice\Documents\Project\auto_fco\FCZ.Core\obj\Debug\net8.0\FCZ.Core.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Minhmice\Documents\Project\auto_fco\FCZ.Core\obj\Debug\net8.0\FCZ.Core.AssemblyInfoInputs.cache
+C:\Users\Minhmice\Documents\Project\auto_fco\FCZ.Core\obj\Debug\net8.0\FCZ.Core.AssemblyInfo.cs
+C:\Users\Minhmice\Documents\Project\auto_fco\FCZ.Core\obj\Debug\net8.0\FCZ.Core.csproj.CoreCompileInputs.cache
+C:\Users\Minhmice\Documents\Project\auto_fco\FCZ.Core\obj\Debug\net8.0\FCZ.Core.sourcelink.json
+C:\Users\Minhmice\Documents\Project\auto_fco\FCZ.Core\obj\Debug\net8.0\FCZ.Core.csproj.Up2Date
+C:\Users\Minhmice\Documents\Project\auto_fco\FCZ.Core\obj\Debug\net8.0\FCZ.Core.dll
+C:\Users\Minhmice\Documents\Project\auto_fco\FCZ.Core\obj\Debug\net8.0\refint\FCZ.Core.dll
+C:\Users\Minhmice\Documents\Project\auto_fco\FCZ.Core\obj\Debug\net8.0\FCZ.Core.pdb
+C:\Users\Minhmice\Documents\Project\auto_fco\FCZ.Core\obj\Debug\net8.0\ref\FCZ.Core.dll

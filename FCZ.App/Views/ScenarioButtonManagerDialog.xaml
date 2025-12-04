@@ -1,0 +1,46 @@
+<Window x:Class="FCZ.App.Views.ScenarioButtonManagerDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Manage Scenario Buttons" Height="500" Width="700">
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <Grid Grid.Row="0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="10"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <GroupBox Grid.Column="0" Header="Available Scenarios">
+                <ListBox x:Name="AvailableScenariosListBox" 
+                        DisplayMemberPath="Name"
+                        SelectionMode="Single"/>
+            </GroupBox>
+
+            <GroupBox Grid.Column="2" Header="Button Assignments">
+                <ListView x:Name="ButtonsListView">
+                    <ListView.View>
+                        <GridView>
+                            <GridViewColumn Header="Button" Width="80" DisplayMemberBinding="{Binding Index, StringFormat='Button {0}'}"/>
+                            <GridViewColumn Header="Scenario" Width="*" DisplayMemberBinding="{Binding DisplayName}"/>
+                        </GridView>
+                    </ListView.View>
+                </ListView>
+            </GroupBox>
+        </Grid>
+
+        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
+            <Button Content="Assign" Click="AssignButton_Click" Margin="0,0,5,0" Padding="10,5"/>
+            <Button Content="Clear" Click="ClearButton_Click" Margin="0,0,5,0" Padding="10,5"/>
+            <Button Content="Clear All" Click="ClearAllButton_Click" Margin="0,0,5,0" Padding="10,5"/>
+            <Button Content="Save" Click="SaveButton_Click" IsDefault="True" Margin="0,0,5,0" Padding="10,5"/>
+            <Button Content="Cancel" Click="CancelButton_Click" IsCancel="True" Padding="10,5"/>
+        </StackPanel>
+    </Grid>
+</Window>
+
+
