@@ -66,13 +66,16 @@ dotnet build FCZAutoDebugger.sln
 dotnet run --project FCZ.App/FCZ.App.csproj
 ```
 
-## Background Mode
+## Background Mode (Ẩn cửa sổ Game)
 
 Khi bật Background Mode, cửa sổ game sẽ được di chuyển ra ngoài viewport (off-screen) nhưng không bị minimize. Điều này cho phép:
 - Windows vẫn render window content
 - Capture vẫn hoạt động bình thường
 - Automation vẫn có thể click và gõ phím
 - User có thể làm việc với các ứng dụng khác
+- Window không hiển thị trên taskbar nhưng vẫn hoạt động đầy đủ
+
+**Lưu ý**: Background Mode và tính năng ẩn cửa sổ đã được gộp thành một. Khi bật, window sẽ được di chuyển off-screen. Khi tắt, window sẽ được đưa trở lại màn hình.
 
 ## Notes
 

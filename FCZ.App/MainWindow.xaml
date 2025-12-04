@@ -6,7 +6,12 @@
         xmlns:local="clr-namespace:FCZ.App"
         xmlns:vm="clr-namespace:FCZ.App.ViewModels"
         mc:Ignorable="d"
-        Title="FCZ Screen Automation Debugger" Height="600" Width="1200">
+        Title="FCZ Screen Automation Debugger" Height="700" Width="1200">
+    <Window.Resources>
+        <local:BoolToColorConverter x:Key="BoolToColorConverter"/>
+        <local:BoolToYesNoConverter x:Key="BoolToYesNoConverter"/>
+        <local:NullToVisibilityConverter x:Key="NullToVisibilityConverter"/>
+    </Window.Resources>
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="2*"/>
@@ -15,7 +20,12 @@
 
         <!-- Left: Preview -->
         <Border Grid.Column="0" BorderBrush="Gray" BorderThickness="1" Margin="5">
-            <Image Source="{Binding CurrentFrame}" Stretch="Uniform"/>
+            <Grid>
+                <Image Source="{Binding CurrentFrame}" Stretch="Uniform"/>
+                <TextBlock Text="No capture" HorizontalAlignment="Center" VerticalAlignment="Center" 
+                          Foreground="Gray" FontSize="16" 
+                          Visibility="{Binding CurrentFrame, Converter={StaticResource NullToVisibilityConverter}}"/>
+            </Grid>
         </Border>
 
         <!-- Right: TabControl -->
@@ -30,27 +40,84 @@
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
 
-                    <TextBlock Grid.Row="0" Text="{Binding StatusMessage}" FontWeight="Bold" Margin="0,0,0,10"/>
+                    <!-- Status Section -->
+                    <GroupBox Grid.Row="0" Header="Status" Margin="0,0,0,10">
+                        <StackPanel>
+                            <TextBlock Text="{Binding StatusMessage}" FontWeight="Bold" Margin="5"/>
+                            <StackPanel Orientation="Horizontal" Margin="5,2">
+                                <TextBlock Text="Process: " FontWeight="SemiBold"/>
+                                <TextBlock>
+                                    <TextBlock.Text>
+                                        <Binding Path="ProcessStatus"/>
+                                    </TextBlock.Text>
+                                    <TextBlock.Foreground>
+                                        <Binding Path="IsProcessFound" Converter="{StaticResource BoolToColorConverter}"/>
+                                    </TextBlock.Foreground>
+                                </TextBlock>
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="5,2">
+                                <TextBlock Text="Capture: " FontWeight="SemiBold"/>
+                                <TextBlock Text="{Binding CaptureStatus}"/>
+                                <TextBlock Text=" (" Margin="5,0,0,0"/>
+                                <TextBlock Text="{Binding Fps}"/>
+                                <TextBlock Text=" FPS)" Margin="0,0,5,0"/>
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="5,2">
+                                <TextBlock Text="Running: " FontWeight="SemiBold"/>
+                                <TextBlock Text="{Binding IsRunning, Converter={StaticResource BoolToYesNoConverter}}"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </GroupBox>
                     
                     <Label Grid.Row="1" Content="Scenario:"/>
                     <ComboBox Grid.Row="2" ItemsSource="{Binding Scenarios}" SelectedItem="{Binding SelectedScenario}" 
                               DisplayMemberPath="Name" Margin="0,0,0,10"/>
 
                     <StackPanel Grid.Row="3" Orientation="Horizontal" Margin="0,0,0,10">
+                        <Button Content="Mở Game" Command="{Binding LaunchGameCommand}" 
+                                Margin="0,0,5,0"/>
                         <Button Content="Run Scenario" Command="{Binding RunScenarioCommand}" 
                                 IsEnabled="{Binding IsProcessFound}" Margin="0,0,5,0"/>
                         <Button Content="Stop" Command="{Binding StopScenarioCommand}" 
                                 IsEnabled="{Binding IsRunning}"/>
                     </StackPanel>
 
-                    <CheckBox Grid.Row="4" Content="Background Mode" IsChecked="{Binding IsBackgroundMode}" 
+                    <CheckBox Grid.Row="4" Content="Ẩn cửa sổ Game (Background Mode)" IsChecked="{Binding IsBackgroundMode}" 
                               Command="{Binding ToggleBackgroundModeCommand}" Margin="0,0,0,10"/>
 
-                    <Button Grid.Row="5" Content="Restore Game Window" Command="{Binding RestoreWindowCommand}" 
-                            IsEnabled="{Binding IsBackgroundMode}"/>
+                    <!-- Window Control Section -->
+                    <GroupBox Grid.Row="5" Header="Window Control" Margin="0,0,0,10">
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="5,5">
+                                <Label Content="Size:" VerticalAlignment="Center" Width="60"/>
+                                <ComboBox ItemsSource="{Binding WindowSizePresets}" 
+                                         SelectedItem="{Binding SelectedWindowSize}"
+                                         DisplayMemberPath="Name" 
+                                         Width="200" Margin="0,0,5,0"/>
+                                <Button Content="Apply Size" Command="{Binding ApplyWindowSizeCommand}" 
+                                       IsEnabled="{Binding IsProcessFound}" Margin="0,0,5,0"/>
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="5,5">
+                                <Button Content="Move to (0,0)" Command="{Binding MoveWindowToOriginCommand}" 
+                                       IsEnabled="{Binding IsProcessFound}" Margin="0,0,5,0"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </GroupBox>
+
+                    <!-- Log Section -->
+                    <GroupBox Grid.Row="7" Header="Activity Log" Margin="0,0,0,10">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto" MaxHeight="200">
+                            <TextBox Text="{Binding LogText}" IsReadOnly="True" 
+                                    TextWrapping="Wrap" 
+                                    Background="Black" Foreground="Lime" 
+                                    BorderThickness="0" Padding="5"/>
+                        </ScrollViewer>
+                    </GroupBox>
                 </Grid>
             </TabItem>
 

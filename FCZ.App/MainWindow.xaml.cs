@@ -21,6 +21,7 @@ namespace FCZ.App
             var templateStore = new TemplateStore(AppConfig.TemplatesPath);
             var imageMatcher = new ImageMatcher();
             var ruleEngine = new RuleEngine(imageMatcher, inputService, templateStore);
+            var gameLauncher = new GameLauncher(windowManager, inputService);
 
             // Create and set ViewModel
             var viewModel = new MainViewModel(
@@ -30,7 +31,8 @@ namespace FCZ.App
                 ruleEngine,
                 templateStore,
                 inputService,
-                imageMatcher);
+                imageMatcher,
+                gameLauncher);
 
             DataContext = viewModel;
         }

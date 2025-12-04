@@ -2,6 +2,7 @@ using System;
 using System.Collections.ObjectModel;
 using System.Drawing;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Input;
@@ -26,6 +27,7 @@ namespace FCZ.App.ViewModels
         private readonly TemplateStore _templateStore;
         private readonly IInputService _inputService;
         private readonly ImageMatcher _imageMatcher;
+        private readonly IGameLauncher _gameLauncher;
 
         private IntPtr? _targetWindowHandle;
         private CancellationTokenSource? _scenarioCancellationTokenSource;
@@ -57,6 +59,25 @@ namespace FCZ.App.ViewModels
         [ObservableProperty]
         private string _logText = string.Empty;
 
+        [ObservableProperty]
+        private bool _isCapturing;
+
+        [ObservableProperty]
+        private string _captureStatus = "Not capturing";
+
+        [ObservableProperty]
+        private int _fps;
+
+        [ObservableProperty]
+        private string _processStatus = "Waiting...";
+
+        [ObservableProperty]
+        private ObservableCollection<WindowSizePreset> _windowSizePresets = new();
+
+        [ObservableProperty]
+        private WindowSizePreset? _selectedWindowSize;
+
+
         public MainViewModel(
             IWindowManager windowManager,
             ProcessWatcher processWatcher,
@@ -64,7 +85,8 @@ namespace FCZ.App.ViewModels
             RuleEngine ruleEngine,
             TemplateStore templateStore,
             IInputService inputService,
-            ImageMatcher imageMatcher)
+            ImageMatcher imageMatcher,
+            IGameLauncher gameLauncher)
         {
             _windowManager = windowManager;
             _processWatcher = processWatcher;
@@ -73,6 +95,7 @@ namespace FCZ.App.ViewModels
             _templateStore = templateStore;
             _inputService = inputService;
             _imageMatcher = imageMatcher;
+            _gameLauncher = gameLauncher;
 
             _processWatcher.ProcessFound += OnProcessFound;
             _processWatcher.ProcessLost += OnProcessLost;
@@ -82,7 +105,26 @@ namespace FCZ.App.ViewModels
             _ruleEngine.ScenarioCompleted += OnScenarioCompleted;
 
             LoadScenarios();
+            InitializeWindowSizePresets();
             _processWatcher.Start();
+        }
+
+        private void InitializeWindowSizePresets()
+        {
+            WindowSizePresets.Clear();
+            WindowSizePresets.Add(new WindowSizePreset { Name = "800x600", Size = new Size(800, 600) });
+            WindowSizePresets.Add(new WindowSizePreset { Name = "1024x768", Size = new Size(1024, 768) });
+            WindowSizePresets.Add(new WindowSizePreset { Name = "1280x720 (HD)", Size = new Size(1280, 720) });
+            WindowSizePresets.Add(new WindowSizePreset { Name = "1366x768", Size = new Size(1366, 768) });
+            WindowSizePresets.Add(new WindowSizePreset { Name = "1600x900", Size = new Size(1600, 900) });
+            WindowSizePresets.Add(new WindowSizePreset { Name = "1920x1080 (Full HD)", Size = new Size(1920, 1080) });
+            WindowSizePresets.Add(new WindowSizePreset { Name = "1280x1024", Size = new Size(1280, 1024) });
+            WindowSizePresets.Add(new WindowSizePreset { Name = "1440x900", Size = new Size(1440, 900) });
+            WindowSizePresets.Add(new WindowSizePreset { Name = "1680x1050", Size = new Size(1680, 1050) });
+            WindowSizePresets.Add(new WindowSizePreset { Name = "2560x1440 (2K)", Size = new Size(2560, 1440) });
+            
+            // Set default
+            SelectedWindowSize = WindowSizePresets.FirstOrDefault(p => p.Size.Width == 1600 && p.Size.Height == 900);
         }
 
         private void OnProcessFound(IntPtr hWnd)
@@ -90,7 +132,23 @@ namespace FCZ.App.ViewModels
             _targetWindowHandle = hWnd;
             IsProcessFound = true;
             StatusMessage = "FC ONLINE found";
-            _captureService.StartCapture(hWnd);
+            ProcessStatus = "Connected";
+            AppendLog("Process fczf.exe found");
+            
+            AppendLog($"Attempting to start capture for window handle: {hWnd}");
+            if (_captureService.StartCapture(hWnd))
+            {
+                IsCapturing = true;
+                CaptureStatus = "Capturing";
+                AppendLog("Capture started successfully");
+            }
+            else
+            {
+                IsCapturing = false;
+                CaptureStatus = "Failed to start";
+                AppendLog("Failed to start capture - invalid window handle");
+            }
+            
             _ruleEngine.SetTargetWindow(hWnd);
         }
 
@@ -99,44 +157,119 @@ namespace FCZ.App.ViewModels
             _targetWindowHandle = null;
             IsProcessFound = false;
             StatusMessage = "Đang chờ FC ONLINE (fczf.exe)...";
+            ProcessStatus = "Disconnected";
+            IsCapturing = false;
+            CaptureStatus = "Stopped";
             _captureService.StopCapture();
             IsRunning = false;
+            AppendLog("Process fczf.exe lost");
         }
+
+        private DateTime _lastFrameTime = DateTime.Now;
+        private int _frameCount = 0;
 
         private void OnFrameArrived(Bitmap frame)
         {
-            System.Windows.Application.Current.Dispatcher.Invoke(() =>
+            if (frame == null)
             {
-                CurrentFrame = ConvertBitmapToBitmapSource(frame);
-            });
-        }
-
-        private BitmapSource ConvertBitmapToBitmapSource(Bitmap bitmap)
-        {
-            var bitmapData = bitmap.LockBits(
-                new Rectangle(0, 0, bitmap.Width, bitmap.Height),
-                System.Drawing.Imaging.ImageLockMode.ReadOnly,
-                System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+                AppendLog("WARNING: Received null frame");
+                return;
+            }
 
             try
             {
-                var bitmapSource = BitmapSource.Create(
-                    bitmapData.Width,
-                    bitmapData.Height,
-                    bitmap.HorizontalResolution,
-                    bitmap.VerticalResolution,
-                    System.Windows.Media.PixelFormats.Bgra32,
-                    null,
-                    bitmapData.Scan0,
-                    bitmapData.Stride * bitmapData.Height,
-                    bitmapData.Stride);
+                var app = System.Windows.Application.Current;
+                if (app == null)
+                {
+                    AppendLog("WARNING: Application.Current is null");
+                    return;
+                }
 
-                bitmapSource.Freeze();
-                return bitmapSource;
+                app.Dispatcher.Invoke(() =>
+                {
+                    try
+                    {
+                        var bitmapSource = ConvertBitmapToBitmapSource(frame);
+                        if (bitmapSource != null)
+                        {
+                            CurrentFrame = bitmapSource;
+                            
+                            // Calculate FPS
+                            _frameCount++;
+                            var elapsed = (DateTime.Now - _lastFrameTime).TotalSeconds;
+                            if (elapsed >= 1.0)
+                            {
+                                Fps = (int)(_frameCount / elapsed);
+                                _frameCount = 0;
+                                _lastFrameTime = DateTime.Now;
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        AppendLog($"ERROR converting frame: {ex.Message}");
+                    }
+                });
             }
-            finally
+            catch (Exception ex)
             {
-                bitmap.UnlockBits(bitmapData);
+                AppendLog($"ERROR in OnFrameArrived: {ex.Message}");
+            }
+        }
+
+        private BitmapSource? ConvertBitmapToBitmapSource(Bitmap bitmap)
+        {
+            if (bitmap == null)
+                return null;
+
+            try
+            {
+                if (bitmap.Width <= 0 || bitmap.Height <= 0)
+                {
+                    AppendLog($"WARNING: Invalid bitmap size: {bitmap.Width}x{bitmap.Height}");
+                    return null;
+                }
+
+                var bitmapData = bitmap.LockBits(
+                    new Rectangle(0, 0, bitmap.Width, bitmap.Height),
+                    System.Drawing.Imaging.ImageLockMode.ReadOnly,
+                    System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+
+                try
+                {
+                    if (bitmapData.Scan0 == IntPtr.Zero)
+                    {
+                        AppendLog("WARNING: BitmapData.Scan0 is null");
+                        return null;
+                    }
+
+                    var bitmapSource = BitmapSource.Create(
+                        bitmapData.Width,
+                        bitmapData.Height,
+                        bitmap.HorizontalResolution,
+                        bitmap.VerticalResolution,
+                        System.Windows.Media.PixelFormats.Bgra32,
+                        null,
+                        bitmapData.Scan0,
+                        bitmapData.Stride * bitmapData.Height,
+                        bitmapData.Stride);
+
+                    if (bitmapSource != null)
+                    {
+                        bitmapSource.Freeze();
+                    }
+
+                    return bitmapSource;
+                }
+                finally
+                {
+                    bitmap.UnlockBits(bitmapData);
+                }
+            }
+            catch (Exception ex)
+            {
+                AppendLog($"ERROR in ConvertBitmapToBitmapSource: {ex.Message}");
+                return null;
             }
         }
 
@@ -234,34 +367,199 @@ namespace FCZ.App.ViewModels
         [RelayCommand]
         private void ToggleBackgroundMode()
         {
-            if (_targetWindowHandle == null || SelectedScenario == null)
+            if (_targetWindowHandle == null)
             {
+                AppendLog("ERROR: No target window handle");
+                IsBackgroundMode = false;
                 return;
             }
 
+            // Get current window size or use default
+            Size targetSize = SelectedScenario?.WindowSize ?? new Size(1280, 720);
+
             if (IsBackgroundMode)
             {
-                // Move window off-screen
-                _windowManager.MoveOffScreen(_targetWindowHandle.Value, SelectedScenario.WindowSize);
+                // Move window off-screen (Background Mode ON)
+                AppendLog($"Attempting to move window off-screen (Background Mode), handle: {_targetWindowHandle.Value}");
+                bool success = _windowManager.MoveOffScreen(_targetWindowHandle.Value, targetSize);
+                
+                if (success)
+                {
+                    AppendLog("SUCCESS: Window moved off-screen - Background Mode active");
+                    AppendLog("Note: Window is hidden but still rendering. Capture and automation continue to work.");
+                }
+                else
+                {
+                    IsBackgroundMode = false; // Revert checkbox
+                    AppendLog("ERROR: Failed to move window off-screen");
+                }
             }
             else
             {
-                // Bring window back to screen
-                _windowManager.BringToScreen(_targetWindowHandle.Value, SelectedScenario.WindowSize);
+                // Bring window back to screen (Background Mode OFF)
+                AppendLog($"Attempting to bring window back to screen, handle: {_targetWindowHandle.Value}");
+                
+                // First check if window still exists
+                if (!IsWindow(_targetWindowHandle.Value))
+                {
+                    AppendLog("WARNING: Window handle invalid, trying to find window again...");
+                    var newHandle = _windowManager.FindTargetWindow();
+                    if (newHandle.HasValue)
+                    {
+                        _targetWindowHandle = newHandle.Value;
+                        AppendLog($"Found new window handle: {newHandle.Value}");
+                    }
+                    else
+                    {
+                        IsBackgroundMode = true; // Revert checkbox
+                        AppendLog("ERROR: Cannot find window - game may have closed");
+                        return;
+                    }
+                }
+                
+                bool success = _windowManager.BringToScreen(_targetWindowHandle.Value, targetSize);
+                
+                if (success)
+                {
+                    AppendLog("SUCCESS: Window brought back to screen - Background Mode disabled");
+                }
+                else
+                {
+                    IsBackgroundMode = true; // Revert checkbox
+                    AppendLog("ERROR: Failed to bring window back to screen");
+                }
             }
         }
 
         [RelayCommand]
         private void RestoreWindow()
         {
-            if (_targetWindowHandle == null || SelectedScenario == null)
+            if (_targetWindowHandle == null)
             {
+                AppendLog("ERROR: No target window handle");
                 return;
             }
 
-            _windowManager.BringToScreen(_targetWindowHandle.Value, SelectedScenario.WindowSize);
-            IsBackgroundMode = false;
+            Size targetSize = SelectedScenario?.WindowSize ?? new Size(1280, 720);
+            AppendLog($"Restoring window to screen, handle: {_targetWindowHandle.Value}");
+            
+            bool success = _windowManager.BringToScreen(_targetWindowHandle.Value, targetSize);
+            
+            if (success)
+            {
+                IsBackgroundMode = false;
+                AppendLog("SUCCESS: Window restored to screen");
+            }
+            else
+            {
+                AppendLog("ERROR: Failed to restore window");
+            }
         }
+
+        [RelayCommand]
+        private void MoveWindowToOrigin()
+        {
+            if (_targetWindowHandle == null)
+            {
+                AppendLog("ERROR: No target window handle");
+                return;
+            }
+
+            AppendLog($"Attempting to move window to (0,0), handle: {_targetWindowHandle.Value}");
+            var result = _windowManager.MoveToOrigin(_targetWindowHandle.Value);
+            
+            if (result.Success)
+            {
+                AppendLog($"SUCCESS: Window moved to (0, 0)");
+            }
+            else
+            {
+                AppendLog($"ERROR: Failed to move window to origin - {result.ErrorMessage}");
+                AppendLog("TIP: Try running as Administrator or check if game blocks window movement");
+            }
+        }
+
+        [DllImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static extern bool IsWindow(IntPtr hWnd);
+
+        [RelayCommand]
+        private async void LaunchGame()
+        {
+            AppendLog("Checking if game is already running...");
+            
+            // Check if game is already running
+            var existingWindow = _windowManager.FindTargetWindow();
+            if (existingWindow != null)
+            {
+                AppendLog("Game is already running - no need to launch again");
+                return;
+            }
+
+            AppendLog("Game not found. Starting launch sequence...");
+            AppendLog("Step 1: Checking Garena launcher...");
+            
+            try
+            {
+                bool success = await _gameLauncher.LaunchGameAsync();
+                
+                if (success)
+                {
+                    AppendLog("SUCCESS: Game launch sequence completed");
+                    AppendLog("Waiting for game window to appear...");
+                }
+                else
+                {
+                    AppendLog("ERROR: Game launch sequence failed");
+                    AppendLog("Please check:");
+                    AppendLog("  1. Garena launcher path is correct");
+                    AppendLog("  2. FC ONLINE is installed");
+                    AppendLog("  3. Try launching manually first");
+                }
+            }
+            catch (Exception ex)
+            {
+                AppendLog($"ERROR: {ex.Message}");
+            }
+        }
+
+        [RelayCommand]
+        private void ApplyWindowSize()
+        {
+            if (_targetWindowHandle == null)
+            {
+                AppendLog("ERROR: No target window handle");
+                return;
+            }
+
+            if (SelectedWindowSize == null)
+            {
+                AppendLog("ERROR: No window size selected");
+                return;
+            }
+
+            AppendLog($"Attempting to resize window to {SelectedWindowSize.Name} ({SelectedWindowSize.Size.Width}x{SelectedWindowSize.Size.Height}), handle: {_targetWindowHandle.Value}");
+            var result = _windowManager.ResizeWindow(_targetWindowHandle.Value, SelectedWindowSize.Size);
+            
+            if (result.Success)
+            {
+                AppendLog($"SUCCESS: Window resized to {SelectedWindowSize.Name}");
+            }
+            else
+            {
+                AppendLog($"ERROR: Failed to resize window - {result.ErrorMessage}");
+                AppendLog("TIP: If game has protection, try:");
+                AppendLog("  1. Run this app as Administrator");
+                AppendLog("  2. Check game settings for window restrictions");
+                AppendLog("  3. Some games block window manipulation for anti-cheat");
+            }
+        }
+    }
+
+    public class WindowSizePreset
+    {
+        public string Name { get; set; } = string.Empty;
+        public Size Size { get; set; }
     }
 }
 

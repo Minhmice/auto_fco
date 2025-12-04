@@ -49,6 +49,11 @@ namespace FCZ.Core.Services
                 StopCapture();
             }
 
+            if (hWnd == IntPtr.Zero)
+            {
+                return false;
+            }
+
             _targetWindowHandle = hWnd;
             _isCapturing = true;
             _cancellationTokenSource = new CancellationTokenSource();
@@ -103,9 +108,11 @@ namespace FCZ.Core.Services
 
                     Thread.Sleep(33); // ~30 FPS
                 }
-                catch
+                catch (Exception ex)
                 {
-                    break;
+                    // Log error but continue trying
+                    System.Diagnostics.Debug.WriteLine($"Capture error: {ex.Message}");
+                    Thread.Sleep(100); // Wait a bit before retrying
                 }
             }
         }
@@ -113,6 +120,10 @@ namespace FCZ.Core.Services
         private Bitmap? CaptureWindow(IntPtr hWnd)
         {
             if (hWnd == IntPtr.Zero)
+                return null;
+
+            // Check if window is valid
+            if (!IsWindow(hWnd))
                 return null;
 
             // Get window dimensions
@@ -125,15 +136,39 @@ namespace FCZ.Core.Services
             if (width <= 0 || height <= 0)
                 return null;
 
+            // Try multiple capture methods for better compatibility
             var bitmap = new Bitmap(width, height, PixelFormat.Format32bppArgb);
+            bool success = false;
+
             using (var graphics = Graphics.FromImage(bitmap))
             {
                 IntPtr hdc = graphics.GetHdc();
                 try
                 {
-                    // Use PrintWindow to capture window content
-                    // PW_RENDERFULLCONTENT flag ensures we get content even when window is off-screen
-                    PrintWindow(hWnd, hdc, 0x00000003); // PW_CLIENTONLY | PW_RENDERFULLCONTENT
+                    // Method 1: Try PrintWindow with PW_RENDERFULLCONTENT (works for off-screen windows)
+                    if (PrintWindow(hWnd, hdc, 0x00000003)) // PW_CLIENTONLY | PW_RENDERFULLCONTENT
+                    {
+                        success = true;
+                    }
+                    else
+                    {
+                        // Method 2: Fallback to BitBlt if PrintWindow fails
+                        IntPtr windowDc = GetWindowDC(hWnd);
+                        if (windowDc != IntPtr.Zero)
+                        {
+                            try
+                            {
+                                if (BitBlt(hdc, 0, 0, width, height, windowDc, 0, 0, 0x00CC0020)) // SRCCOPY
+                                {
+                                    success = true;
+                                }
+                            }
+                            finally
+                            {
+                                ReleaseDC(hWnd, windowDc);
+                            }
+                        }
+                    }
                 }
                 finally
                 {
@@ -141,7 +176,7 @@ namespace FCZ.Core.Services
                 }
             }
 
-            return bitmap;
+            return success ? bitmap : null;
         }
 
         public void Dispose()
@@ -156,6 +191,18 @@ namespace FCZ.Core.Services
 
         [DllImport("user32.dll")]
         private static extern bool PrintWindow(IntPtr hWnd, IntPtr hdcBlt, int nFlags);
+
+        [DllImport("user32.dll")]
+        private static extern bool IsWindow(IntPtr hWnd);
+
+        [DllImport("user32.dll")]
+        private static extern IntPtr GetWindowDC(IntPtr hWnd);
+
+        [DllImport("user32.dll")]
+        private static extern int ReleaseDC(IntPtr hWnd, IntPtr hDC);
+
+        [DllImport("gdi32.dll")]
+        private static extern bool BitBlt(IntPtr hObject, int nXDest, int nYDest, int nWidth, int nHeight, IntPtr hObjectSource, int nXSrc, int nYSrc, int dwRop);
 
         [StructLayout(LayoutKind.Sequential)]
         private struct RECT
